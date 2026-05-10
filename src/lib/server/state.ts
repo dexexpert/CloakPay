@@ -9,10 +9,35 @@ import { getRuntimeInfo } from "@/lib/server/runtime";
 declare global {
   // eslint-disable-next-line no-var
   var __cloakpay_state_write_queue: Promise<void> | undefined;
+  // eslint-disable-next-line no-var
+  var __cloakpay_memory_state: AppState | undefined;
+  // eslint-disable-next-line no-var
+  var __cloakpay_use_memory_state: boolean | undefined;
+}
+
+function isReadOnlyFsError(error: unknown) {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+  const code = (error as NodeJS.ErrnoException).code;
+  return code === "EROFS" || code === "EACCES" || code === "EPERM";
 }
 
 function getStateFilePath() {
-  return process.env.CLOAKPAY_STATE_FILE ?? path.join(process.cwd(), ".data", "cloakpay-state.json");
+  if (process.env.CLOAKPAY_STATE_FILE) {
+    return process.env.CLOAKPAY_STATE_FILE;
+  }
+
+  // Vercel / AWS Lambda only allow writes under /tmp; everywhere else uses the project .data dir.
+  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    return path.join("/tmp", "cloakpay-state.json");
+  }
+
+  return path.join(process.cwd(), ".data", "cloakpay-state.json");
+}
+
+function cloneState(state: AppState): AppState {
+  return JSON.parse(JSON.stringify(state)) as AppState;
 }
 
 function buildInitialState(): AppState {
@@ -50,26 +75,68 @@ function buildInitialState(): AppState {
   };
 }
 
+function switchToMemoryState() {
+  global.__cloakpay_use_memory_state = true;
+  if (!global.__cloakpay_memory_state) {
+    global.__cloakpay_memory_state = buildInitialState();
+  }
+}
+
 async function ensureStateFile() {
+  if (global.__cloakpay_use_memory_state) {
+    return;
+  }
+
   const filePath = getStateFilePath();
-  await mkdir(path.dirname(filePath), { recursive: true });
 
   try {
-    await readFile(filePath, "utf8");
-  } catch {
-    await writeFile(filePath, JSON.stringify(buildInitialState(), null, 2), "utf8");
+    await mkdir(path.dirname(filePath), { recursive: true });
+
+    try {
+      await readFile(filePath, "utf8");
+    } catch {
+      await writeFile(filePath, JSON.stringify(buildInitialState(), null, 2), "utf8");
+    }
+  } catch (error) {
+    if (!isReadOnlyFsError(error)) {
+      throw error;
+    }
+    // Read-only filesystem (e.g. cold-start path on a serverless host with the wrong target dir) — fall back to in-memory state.
+    switchToMemoryState();
   }
 }
 
 export async function readState() {
   await ensureStateFile();
+
+  if (global.__cloakpay_use_memory_state) {
+    if (!global.__cloakpay_memory_state) {
+      global.__cloakpay_memory_state = buildInitialState();
+    }
+    return cloneState(global.__cloakpay_memory_state);
+  }
+
   const raw = await readFile(getStateFilePath(), "utf8");
   return JSON.parse(raw) as AppState;
 }
 
 export async function writeState(nextState: AppState) {
   await ensureStateFile();
-  await writeFile(getStateFilePath(), JSON.stringify(nextState, null, 2), "utf8");
+
+  if (global.__cloakpay_use_memory_state) {
+    global.__cloakpay_memory_state = cloneState(nextState);
+    return;
+  }
+
+  try {
+    await writeFile(getStateFilePath(), JSON.stringify(nextState, null, 2), "utf8");
+  } catch (error) {
+    if (!isReadOnlyFsError(error)) {
+      throw error;
+    }
+    switchToMemoryState();
+    global.__cloakpay_memory_state = cloneState(nextState);
+  }
 }
 
 export async function updateState<T>(updater: (state: AppState) => Promise<T> | T) {
