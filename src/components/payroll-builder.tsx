@@ -59,7 +59,8 @@ export function PayrollBuilder({ wallet, onBatchCreated }: PayrollBuilderProps) 
   }
 
   function loadCsv(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
+    const input = event.target;
+    const file = input.files?.[0];
     if (!file) {
       return;
     }
@@ -68,14 +69,32 @@ export function PayrollBuilder({ wallet, onBatchCreated }: PayrollBuilderProps) 
     file
       .text()
       .then((csvText) => {
+        let parsed: PayrollRecipientInput[];
+        try {
+          parsed = parsePayrollCsv(csvText);
+        } catch (csvError: unknown) {
+          setError(csvError instanceof Error ? csvError.message : "Unable to parse CSV.");
+          setStatus("CSV upload failed. Fix the file and try again.");
+          return;
+        }
+
+        if (parsed.length === 0) {
+          setError("CSV did not contain any recipients. Expected columns: name, wallet, amount.");
+          setStatus("CSV upload was empty.");
+          return;
+        }
+
         startTransition(() => {
-          const parsed = parsePayrollCsv(csvText);
           setRecipients(parsed);
           setStatus(`Loaded ${parsed.length} recipients from CSV.`);
         });
       })
       .catch((csvError: unknown) => {
         setError(csvError instanceof Error ? csvError.message : "Unable to read CSV.");
+      })
+      .finally(() => {
+        // Allow re-uploading the same file by clearing the input value.
+        input.value = "";
       });
   }
 

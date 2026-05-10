@@ -23,20 +23,29 @@ export const batchSchema = z.object({
 export function parsePayrollCsv(csvText: string): PayrollRecipientInput[] {
   const parsed = Papa.parse<Record<string, string>>(csvText, {
     header: true,
-    skipEmptyLines: true,
+    skipEmptyLines: "greedy",
+    transformHeader: (header) => header.trim().toLowerCase(),
   });
 
   if (parsed.errors.length > 0) {
     throw new Error(parsed.errors[0]?.message ?? "Unable to parse CSV");
   }
 
-  const rows = parsed.data.map((row) => ({
-    name: row.name ?? "",
-    wallet: row.wallet ?? "",
-    amount: row.amount ?? "",
-  }));
+  // Load rows leniently so users can review and fix them in the UI; strict validation runs at submit.
+  return parsed.data
+    .map((row) => {
+      const name = (row.name ?? "").trim();
+      const wallet = (row.wallet ?? "").trim();
+      const rawAmount = (row.amount ?? "").trim();
+      const amount = rawAmount === "" ? 0 : Number(rawAmount);
 
-  return rows.map((row) => recipientSchema.parse(row));
+      return {
+        name,
+        wallet,
+        amount: Number.isFinite(amount) ? amount : 0,
+      } satisfies PayrollRecipientInput;
+    })
+    .filter((row) => row.name !== "" || row.wallet !== "" || row.amount > 0);
 }
 
 export function validateRecipients(recipients: PayrollRecipientInput[]) {
