@@ -1,0 +1,774 @@
+I’ll turn the track text into a clear requirements checklist, then map it to a “highest-scoring” product plan with build scope, demo flow, README/video strategy, and judging-score tactics.
+
+Thought for 14s
+
+I’m treating this as the Cloak side track for the Colosseum Frontier Hackathon based on your uploaded requirement text. The main goal is simple:
+
+Build a real Solana product where private payments are not optional — they are the main reason the product exists.
+
+The strongest path is not to use every Cloak feature. The requirement clearly says: “Going deep on one capability beats using all of them shallowly.”
+
+1. What the requirements really mean
+
+Cloak is looking for products where public Solana transactions create a real business problem.
+
+Normal Solana payments expose:
+
+sender
+receiver
+amount
+timing
+wallet history
+
+Cloak hides sensitive payment details using a shielded pool, client-side ZK proofs, private transfers, batch disbursement, stealth addresses, viewing keys, and private swaps. The official docs describe the TypeScript SDK as the main choice for web apps, browser wallets, and Node.js backends, with methods such as deposit, withdraw, send, and swap.
+
+The judging is:
+
+Category	Weight	What judges want
+Integration depth	40%	Cloak must do the real private payment work
+Product	30%	Clean UX, working demo, reliable flow, good error states
+Real-world use	30%	Clear user, clear pain, privacy must be necessary
+
+So to win, your project should feel like:
+
+“This product cannot work properly without Cloak.”
+
+Not:
+
+“We added a private payment button.”
+
+2. Best product idea to maximize winning chance
+Build: CloakPay Payroll
+
+A private payroll and contractor payment app for Solana teams.
+
+Target user
+
+Small crypto teams, DAOs, agencies, and startups that pay contractors in USDC.
+
+Real pain
+
+If a team pays contractors from a public Solana wallet:
+
+everyone can see salary amounts
+contractors can compare payments
+competitors can watch treasury movement
+vendors can see the company’s financial activity
+payroll history stays public forever
+
+This is exactly the type of use case the track asks for: private payroll, contractor payments, B2B payments, and viewing-key-based audit.
+
+3. Winning product thesis
+
+Your pitch should be:
+
+CloakPay lets Solana teams pay contractors privately in USDC while still giving finance teams and auditors a controlled audit trail through viewing keys.
+
+That directly hits all three judging categories:
+
+Judging area	How CloakPay wins
+Integration depth	Uses Cloak batch disbursement, private transfers, and viewing keys as core flow
+Product	Simple dashboard: create payroll batch → shield funds → pay recipients → export audit
+Real-world use	Payroll privacy is a real business need, not a gimmick
+4. Core feature scope
+
+Do not build too much. Build one polished private payroll flow.
+
+MVP features
+Admin dashboard
+
+The admin can:
+
+connect Solana wallet
+create a payroll batch
+add recipients manually or by CSV
+choose token: USDC first
+enter payment amount per recipient
+preview total amount
+deposit funds into Cloak shielded balance
+execute private batch payment
+see payment status
+generate audit/viewing-key report
+Recipient flow
+
+Recipient can:
+
+receive a private claim link or stealth payment notice
+connect wallet
+claim or receive funds privately
+see simple payment confirmation
+Audit flow
+
+Finance/admin can:
+
+generate a viewing key
+share it with an auditor
+auditor opens a simple audit page
+auditor sees only permitted payroll history
+export CSV/PDF report
+
+This gives you a strong story: private by default, auditable when needed.
+
+5. Cloak SDK capabilities to use
+
+Use these deeply:
+
+Must-have
+1. Batch disbursement
+
+This is your main winning feature.
+
+Use Cloak to send one payroll batch to many recipients privately.
+
+Why it matters:
+
+shows real Cloak integration
+directly matches the track’s payroll direction
+stronger than a simple one-to-one private send
+2. Viewing keys
+
+This is your second strongest feature.
+
+Why it matters:
+
+solves the compliance problem
+makes the product credible for businesses
+shows you understand Cloak is not just privacy, but selective disclosure
+3. Private transfer
+
+Needed for the actual payment flow.
+
+The official SDK API exposes core methods including deposit, withdraw, send, and swap, so your app should clearly show which Cloak method powers each step.
+
+Optional, only if time allows
+4. Stealth addresses
+
+Useful for contractor claim links.
+
+Example:
+
+“Send to Alex without exposing Alex’s public destination address.”
+
+5. Private swaps
+
+Skip this unless your core payroll is done. Private swaps are useful, but they can distract from the payroll story.
+
+6. Suggested app architecture
+Frontend
+
+Use:
+
+Next.js
+TypeScript
+Tailwind CSS
+Solana wallet adapter
+Cloak TypeScript SDK
+CSV import for payroll list
+
+Pages:
+
+/
+  Landing page
+
+/dashboard
+  Payroll batches
+
+/dashboard/new-batch
+  Create private payroll batch
+
+/dashboard/batch/[id]
+  Batch status and payment execution
+
+/claim/[claimId]
+  Recipient claim page
+
+/audit
+  Viewing key audit portal
+
+/settings
+  Wallet, token, and organization settings
+Backend
+
+Use a light backend only for app metadata.
+
+Recommended:
+
+Next.js API routes, or
+FastAPI, if you prefer Python
+
+Store:
+
+organization name
+payroll batch metadata
+recipient display names
+payment status
+encrypted notes if needed
+claim link records
+audit report metadata
+
+Do not store private keys.
+
+Do not make backend custodial.
+
+Cloak should handle the private payment path.
+
+Database
+
+Use:
+
+Supabase Postgres, or
+Firebase, if you want faster setup
+
+Tables:
+
+organizations
+users
+payroll_batches
+payroll_recipients
+claim_links
+audit_sessions
+transaction_logs
+
+Example schema:
+
+payroll_batches
+- id
+- organization_id
+- token
+- total_amount
+- status
+- created_by_wallet
+- cloak_transaction_id
+- created_at
+
+payroll_recipients
+- id
+- batch_id
+- display_name
+- wallet_address
+- amount
+- status
+- claim_link_id
+- created_at
+
+audit_sessions
+- id
+- organization_id
+- viewing_key_hash
+- scope
+- expires_at
+- created_at
+7. End-to-end user flow
+
+Your demo should show this exact flow.
+
+Flow A: Admin creates payroll
+Admin connects wallet.
+Admin creates batch: “April Contractor Payroll.”
+Admin uploads CSV:
+name,wallet,amount
+Alex,WalletA,1200
+Maria,WalletB,950
+Chen,WalletC,1500
+App validates:
+valid Solana addresses
+positive amounts
+enough balance
+token supported
+Admin sees:
+3 recipients
+Total: 3,650 USDC
+Privacy: amounts and recipients hidden through Cloak
+Admin clicks Shield Funds.
+App calls Cloak deposit flow.
+Admin clicks Run Private Payroll.
+App calls Cloak private transfer / batch disbursement.
+App shows success state.
+Flow B: Recipient receives payment
+Recipient opens claim link.
+Recipient connects wallet.
+Recipient claims payment.
+App shows:
+Payment received privately.
+Amount: 1,200 USDC
+Public explorer does not reveal sender, recipient, or amount.
+Flow C: Auditor checks report
+Admin goes to audit page.
+Admin creates scoped viewing key.
+Auditor enters viewing key.
+Auditor sees:
+Batch: April Contractor Payroll
+Total paid: 3,650 USDC
+Recipients: 3
+Status: Completed
+Export: CSV
+
+This flow makes the value obvious.
+
+8. How to make it score high
+Integration depth — 40%
+
+This is the most important category.
+
+To score high:
+
+Show real Cloak SDK calls in code.
+Do not hide the Cloak flow behind fake UI.
+Clearly separate normal public payment vs private Cloak payment.
+Show deposit → shielded balance → private batch payment → audit trail.
+Add meaningful error handling for Cloak-specific issues.
+
+Include UI states like:
+
+Generating proof...
+Submitting through relay...
+Waiting for confirmation...
+Payment completed privately.
+Stale root detected. Retrying with latest tree...
+Insufficient shielded balance.
+Recipient wallet invalid.
+
+Official Cloak materials say the SDK handles deposits, transfers, swaps, compliance-friendly history, relays, and proof flow without builders needing to run provers or circuit builds.
+
+That is exactly what your README and demo should explain.
+
+Product — 30%
+
+Judges will test the app.
+
+To score high:
+
+Make setup easy.
+Make the UI clean.
+Make the happy path work.
+Add loading states.
+Add error states.
+Add empty states.
+Add sample CSV.
+Add seed/demo mode.
+Add clear transaction status.
+
+Your UI should not look like a hacky SDK wrapper. It should look like a real payroll tool.
+
+Recommended screens:
+
+Dashboard
+Private Payroll Batches
+
+[New Payroll Batch]
+
+April Contractor Payroll
+3 recipients · 3,650 USDC · Completed
+
+March Vendor Payments
+5 recipients · 8,200 USDC · Completed
+New batch screen
+Step 1: Add recipients
+Step 2: Review total
+Step 3: Shield funds
+Step 4: Run private payroll
+Step 5: Generate audit report
+Audit screen
+Audit Portal
+
+Enter viewing key:
+[________________]
+
+[View Report]
+Real-world use — 30%
+
+Your pitch must make the target user obvious.
+
+Do not say:
+
+“This is useful for privacy.”
+
+Say:
+
+“A Solana startup paying contractors in USDC cannot expose every contractor’s salary on-chain. CloakPay solves that by making payroll private while still giving the finance team a viewing-key-based audit trail.”
+
+That is much stronger.
+
+9. Recommended technical implementation plan
+Phase 1 — Project setup
+
+Set up:
+
+pnpm create next-app cloakpay --typescript
+cd cloakpay
+pnpm add @cloak.dev/sdk @solana/web3.js
+pnpm add @solana/wallet-adapter-react @solana/wallet-adapter-wallets
+pnpm add papaparse zod
+pnpm add tailwindcss
+
+Cloak docs list the install path as npm install @cloak.dev/sdk @solana/web3.js.
+
+Build:
+
+wallet connect
+app shell
+dashboard layout
+demo data
+
+Deliverable:
+
+User can open dashboard and connect wallet.
+Phase 2 — Payroll batch builder
+
+Build:
+
+CSV upload
+manual recipient entry
+validation with Zod
+total calculation
+token selector
+review screen
+
+Validation rules:
+
+wallet must be valid Solana address
+amount must be greater than 0
+recipient list cannot be empty
+duplicate wallets should show warning
+total amount must be visible before execution
+
+Deliverable:
+
+User can create a valid payroll batch.
+Phase 3 — Cloak deposit flow
+
+Build:
+
+“Shield funds” button
+Cloak SDK initialization
+deposit call
+transaction status UI
+shielded balance state
+retry/error state
+
+UI states:
+
+Preparing deposit
+Waiting for wallet approval
+Generating proof
+Submitting transaction
+Confirmed
+Failed
+Retry
+
+Deliverable:
+
+Admin can deposit payroll funds into Cloak shielded balance.
+Phase 4 — Private batch disbursement
+
+Build:
+
+call Cloak send/batch flow
+send funds to recipients
+show progress per recipient or batch
+store batch status
+show transaction confirmation
+
+Important:
+
+Your demo should clearly say:
+
+“This is where Cloak does the main work. The public chain does not expose the payroll recipient list or payment amounts.”
+
+Deliverable:
+
+Admin can run a private payroll batch end to end.
+Phase 5 — Recipient claim page
+
+Build:
+
+/claim/[claimId]
+recipient connects wallet
+claim status
+private receipt screen
+
+Simple version:
+
+claim link maps to intended wallet and amount metadata
+payment is already sent privately
+recipient page shows confirmation
+
+Better version:
+
+stealth address / claim flow if Cloak SDK support is ready
+
+Deliverable:
+
+Recipient has a clean payment experience.
+Phase 6 — Viewing key audit portal
+
+Build:
+
+admin can generate/export viewing key or audit access
+auditor can enter key
+app shows filtered payroll history
+export CSV
+
+Report fields:
+
+batch name
+date
+token
+total amount
+recipient count
+status
+transaction reference
+
+Do not overbuild. The main goal is to show selective disclosure.
+
+Deliverable:
+
+A finance reviewer can verify private payments without public exposure.
+Phase 7 — Polish and reliability
+
+Add:
+
+test wallet instructions
+sample CSV
+clear setup guide
+screenshots
+error boundaries
+loading states
+retry buttons
+clean empty states
+
+Add tests for:
+
+CSV validation
+invalid wallet
+duplicate recipient
+empty batch
+total calculation
+failed transaction state
+audit report rendering
+10. What your GitHub repo should contain
+
+Your repo should be public and clean.
+
+Recommended structure:
+
+cloakpay/
+  README.md
+  package.json
+  .env.example
+  src/
+    app/
+      page.tsx
+      dashboard/
+      claim/
+      audit/
+    components/
+      WalletConnectButton.tsx
+      PayrollBatchForm.tsx
+      RecipientTable.tsx
+      PaymentStatusCard.tsx
+      AuditReport.tsx
+    lib/
+      cloak/
+        client.ts
+        deposit.ts
+        batchDisburse.ts
+        viewingKeys.ts
+      solana/
+        connection.ts
+      validation/
+        payrollSchema.ts
+    data/
+      sample-payroll.csv
+  docs/
+    architecture.md
+    demo-script.md
+    screenshots/
+11. README structure that judges will like
+
+Your README should be direct.
+
+# CloakPay
+
+Private payroll and contractor payments for Solana teams.
+
+## Problem
+
+Solana payments are public by default. For teams paying contractors in USDC, this exposes salaries, recipients, timing, and treasury movement.
+
+## Solution
+
+CloakPay lets an organization run private payroll batches through Cloak. Recipients get paid without exposing payment amounts or destination addresses publicly. Finance teams can still review payroll through viewing keys.
+
+## Who it is for
+
+- Solana startups
+- DAOs
+- agencies
+- teams paying contractors in USDC
+
+## How Cloak is used
+
+Cloak is central to the product:
+
+1. Deposit payroll funds into Cloak shielded balance
+2. Execute private batch disbursement
+3. Use viewing keys for audit reports
+
+## Architecture
+
+Frontend: Next.js + TypeScript  
+Wallet: Solana wallet adapter  
+Privacy layer: Cloak SDK  
+Database: Supabase/Firebase/local demo store
+
+## Run locally
+
+pnpm install
+cp .env.example .env.local
+pnpm dev
+
+## Demo flow
+
+1. Connect wallet
+2. Upload payroll CSV
+3. Shield funds
+4. Run private payroll
+5. Open audit portal
+6. Export report
+
+## Links
+
+Live app:
+Demo video:
+Program IDs:
+12. Demo video plan under 5 minutes
+
+The requirement asks for a demo video under 5 minutes that shows the product working end to end.
+
+Use this exact structure.
+
+0:00–0:30 — Problem
+
+Say:
+
+“On Solana, payroll payments are public. Anyone can inspect salaries, contractors, timing, and treasury movement. CloakPay solves this for teams paying contractors in USDC.”
+
+0:30–1:00 — Product overview
+
+Show:
+
+dashboard
+new payroll batch
+audit page
+1:00–2:30 — Private payroll flow
+
+Show:
+
+connect wallet
+upload CSV
+review total
+shield funds
+run private payroll
+status success
+
+Say:
+
+“Cloak is not a side feature here. The payroll flow depends on Cloak’s shielded transfer and batch disbursement.”
+
+2:30–3:30 — Recipient flow
+
+Show:
+
+open claim link
+connect recipient wallet
+payment confirmation
+3:30–4:30 — Audit flow
+
+Show:
+
+admin generates viewing key
+auditor opens report
+auditor exports CSV
+
+Say:
+
+“The public cannot see payroll details, but authorized reviewers can verify the payment history.”
+
+4:30–5:00 — Why this should win
+
+Say:
+
+“CloakPay uses Cloak deeply, has a clear business user, and solves a real privacy problem that blocks many organizations from running payroll on public Solana rails.”
+
+13. Features to avoid
+
+Do not waste time on:
+
+complex accounting system
+multi-company roles
+full HR management
+private swaps unless core payroll is finished
+custom smart contracts unless needed
+heavy AI features
+too many tokens
+too many dashboards
+
+A focused product wins more often than a broad unfinished one.
+
+14. Winning checklist
+
+Before submission, make sure you have:
+
+Product
+ Live URL or clean local setup
+ Wallet connect works
+ Payroll batch creation works
+ CSV upload works
+ Cloak deposit flow works
+ Private payment flow works
+ Audit/viewing key flow works
+ Error states are clear
+ Loading states are clear
+Code
+ Public GitHub repo
+ Clean folder structure
+ .env.example
+ No private keys committed
+ SDK calls easy to find
+ Sample CSV included
+ Basic tests included
+README
+ Problem explained
+ Target user explained
+ Cloak integration explained
+ Setup instructions
+ Demo instructions
+ Live URL
+ Program IDs or relevant addresses
+ Known limitations
+Demo video
+ Under 5 minutes
+ Shows real private payment flow
+ Explains why Cloak is central
+ Shows audit/viewing-key flow
+ Shows product decisions, not only UI clicks
+15. Final recommended strategy
+
+Build CloakPay Payroll.
+
+Use USDC payroll batch disbursement + viewing-key audit portal as the core.
+
+Your winning angle:
+
+Private payroll for Solana teams: salaries hidden from the public, but still auditable by finance teams.
+
+This is the best balance of:
+
+strong Cloak integration
+real business pain
+demoable product
+clear judging story
+manageable hackathon scope
+
+The most important thing: make the demo feel real. Judges should immediately understand who uses it, why public Solana payments are a problem, and how Cloak solves that problem better than a normal wallet transfer.
