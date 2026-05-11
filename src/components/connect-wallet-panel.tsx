@@ -1,12 +1,32 @@
 "use client";
 
-import { RuntimeInfo } from "@/lib/types";
+import { RuntimeInfo, SupportedToken } from "@/lib/types";
 
 interface ConnectWalletPanelProps {
   runtime: RuntimeInfo;
 }
 
+const TOKEN_GLYPH: Record<SupportedToken, string> = {
+  SOL: "◎",
+  USDC: "$",
+  USDT: "₮",
+};
+
+function getHostname(url: string): string {
+  if (!url) {
+    return "";
+  }
+  try {
+    return new URL(url).host;
+  } catch {
+    return url.replace(/^https?:\/\//i, "").replace(/\/.*$/, "");
+  }
+}
+
 export function ConnectWalletPanel({ runtime }: ConnectWalletPanelProps) {
+  const isLive = runtime.mode === "live";
+  const modeLabel = isLive ? "Live treasury signer" : "Demo backend mode";
+
   return (
     <div className="panel hero-panel dashboard-hero">
       <div className="dashboard-hero-copy">
@@ -16,11 +36,11 @@ export function ConnectWalletPanel({ runtime }: ConnectWalletPanelProps) {
           CloakPay is built for finance leads who need shielded execution without giving up clean reporting.
         </p>
         <div className="hero-inline-stats">
-          <div>
+          <div className="hero-inline-stat">
             <span>Execution mode</span>
             <strong>Batch disbursement</strong>
           </div>
-          <div>
+          <div className="hero-inline-stat">
             <span>Audit model</span>
             <strong>Chain-scanned viewing key</strong>
           </div>
@@ -28,49 +48,56 @@ export function ConnectWalletPanel({ runtime }: ConnectWalletPanelProps) {
       </div>
 
       <div className="wallet-box wallet-box-upgraded">
-        <div className="wallet-status-line">
-          <span className={`dot ${runtime.mode === "live" ? "dot-live" : "dot-idle"}`} />
-          <p className="wallet-label">{runtime.mode === "live" ? "Server treasury signer" : "Demo backend mode"}</p>
+        <div className={`mode-badge mode-${runtime.mode}`} role="status">
+          <span className="mode-badge-dot" aria-hidden="true" />
+          <span className="mode-badge-label">{modeLabel}</span>
         </div>
-        <strong className="wallet-address">{runtime.treasuryWallet}</strong>
-        <p className="muted wallet-description">
-          {runtime.note}
-        </p>
-        <div className="wallet-meta-grid">
-          <div className="wallet-meta">
-            <span>Mode</span>
-            <strong>{runtime.mode === "live" ? "Live Cloak execution" : "Persistent demo execution"}</strong>
+
+        <p className="muted wallet-description">{runtime.note}</p>
+
+        <div className="wallet-info-list">
+          <div className="wallet-info-row">
+            <span className="wallet-info-label">Organization</span>
+            <strong className="wallet-info-value">{runtime.organizationName}</strong>
           </div>
-          <div className="wallet-meta">
-            <span>Organization</span>
-            <strong>{runtime.organizationName}</strong>
+          <div className="wallet-info-row">
+            <span className="wallet-info-label">RPC</span>
+            <strong className="wallet-info-value" title={runtime.rpcUrl}>
+              {getHostname(runtime.rpcUrl)}
+            </strong>
           </div>
-        </div>
-        <div className="wallet-meta-grid">
-          <div className="wallet-meta">
-            <span>RPC</span>
-            <strong>{runtime.rpcUrl}</strong>
-          </div>
-          <div className="wallet-meta">
-            <span>Relay</span>
-            <strong>{runtime.relayUrl}</strong>
+          <div className="wallet-info-row">
+            <span className="wallet-info-label">Relay</span>
+            <strong className="wallet-info-value" title={runtime.relayUrl}>
+              {getHostname(runtime.relayUrl)}
+            </strong>
           </div>
         </div>
 
-        <div className="token-support-grid">
-          {runtime.tokenSupport.map((entry) => (
-            <div className="token-support-card" key={entry.token}>
-              <div className="token-support-head">
-                <strong>{entry.token}</strong>
-                <span className={`status-pill ${entry.liveClaim ? "status-success" : "status-progress"}`}>
-                  {entry.livePayroll && entry.liveClaim ? "full live" : "live payroll"}
-                </span>
-              </div>
-              <p className="muted">{entry.note}</p>
-              {entry.mintAddress ? <code className="token-support-mint">{entry.mintAddress}</code> : null}
-            </div>
-          ))}
-        </div>
+        {runtime.tokenSupport.length > 0 ? (
+          <div className="token-chip-row" role="list">
+            {runtime.tokenSupport.map((entry) => {
+              const fullLive = entry.livePayroll && entry.liveClaim;
+              return (
+                <div
+                  className={`token-chip token-chip-${entry.token.toLowerCase()}`}
+                  key={entry.token}
+                  role="listitem"
+                  title={entry.note}
+                >
+                  <span className="token-chip-glyph" aria-hidden="true">
+                    {TOKEN_GLYPH[entry.token]}
+                  </span>
+                  <span className="token-chip-symbol">{entry.token}</span>
+                  <span
+                    className={`token-chip-status ${fullLive ? "is-live" : "is-partial"}`}
+                    aria-label={fullLive ? "Full live support" : "Partial support"}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        ) : null}
       </div>
     </div>
   );

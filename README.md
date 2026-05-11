@@ -4,8 +4,8 @@ Private payroll and contractor payments for Solana teams, built on the [Cloak](h
 
 ## Links
 
-- **Live demo:** https://YOUR-DEPLOYMENT.vercel.app *(update after Vercel deploy)*
-- **GitHub:** https://github.com/YOUR-ORG/cloakpay *(update after first push)*
+- **Live demo:** https://cloak-pay-five.vercel.app *(update after Vercel deploy)*
+- **GitHub:** https://github.com/dexexpert/CloakPay *(update after first push)*
 - **Demo video:** https://www.loom.com/share/YOUR-VIDEO-ID *(update after recording)*
 - **Cloak program ID:** [`CLOAK_PROGRAM_ID`](https://docs.cloak.ag/sdk/api-reference) — imported from `@cloak.dev/sdk` and used directly in [`src/lib/server/cloak-runtime.ts`](src/lib/server/cloak-runtime.ts). No custom on-chain program is deployed; CloakPay is a pure SDK consumer.
 
@@ -127,4 +127,3 @@ To reset the local demo to a clean seeded state, delete `.data/cloakpay-state.js
 ## Docs
 
 - [Architecture overview](docs/architecture.md)
-- [Demo video plan](docs/demo-script.md)
