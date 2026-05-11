@@ -17,6 +17,11 @@ const display = Space_Grotesk({
 export const metadata: Metadata = {
   title: "CloakPay",
   description: "Private payroll and contractor payments for Solana teams.",
+  icons: {
+    icon: [{ url: "/cloakpay-logo.png", type: "image/png" }],
+    shortcut: "/cloakpay-logo.png",
+    apple: "/cloakpay-logo.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
