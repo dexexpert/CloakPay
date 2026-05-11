@@ -762,30 +762,19 @@ label {
 }
 
 .token-chip-glyph {
-  display: grid;
-  place-items: center;
-  width: 1.35rem;
-  height: 1.35rem;
+  display: inline-flex;
+  width: 1.4rem;
+  height: 1.4rem;
+  flex-shrink: 0;
   border-radius: 50%;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: #03110f;
-  letter-spacing: 0;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
-.token-chip-sol .token-chip-glyph {
-  background: linear-gradient(135deg, #9945ff, #14f195);
-  color: #ffffff;
-}
-
-.token-chip-usdc .token-chip-glyph {
-  background: linear-gradient(135deg, #2775ca, #5aa6ff);
-  color: #ffffff;
-}
-
-.token-chip-usdt .token-chip-glyph {
-  background: linear-gradient(135deg, #26a17b, #4ad29c);
-  color: #ffffff;
+.token-chip-glyph svg {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .token-chip-symbol {
