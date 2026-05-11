@@ -12,14 +12,29 @@ interface AuditPortalProps {
   onRefresh: () => Promise<void> | void;
 }
 
+const DEFAULT_MESSAGE = "Generate a scoped viewing key and unlock a Cloak-derived audit report.";
+
 export function AuditPortal({ batches, onRefresh, sessions }: AuditPortalProps) {
   const [selectedBatchId, setSelectedBatchId] = useState(batches[0]?.id ?? "");
   const [enteredKey, setEnteredKey] = useState("");
-  const [message, setMessage] = useState("Generate a scoped viewing key and unlock a Cloak-derived audit report.");
+  const [message, setMessage] = useState(DEFAULT_MESSAGE);
   const [error, setError] = useState("");
   const [visibleSession, setVisibleSession] = useState<AuditSession | null>(null);
   const [visibleBatch, setVisibleBatch] = useState<PayrollBatch | null>(null);
   const [report, setReport] = useState<AuditReport | null>(null);
+
+  function handleBatchChange(nextBatchId: string) {
+    if (nextBatchId === selectedBatchId) {
+      return;
+    }
+    setSelectedBatchId(nextBatchId);
+    setVisibleBatch(null);
+    setVisibleSession(null);
+    setReport(null);
+    setEnteredKey("");
+    setError("");
+    setMessage(DEFAULT_MESSAGE);
+  }
 
   useEffect(() => {
     if (!selectedBatchId && batches[0]?.id) {
@@ -121,7 +136,7 @@ export function AuditPortal({ batches, onRefresh, sessions }: AuditPortalProps) 
             <label>
               Batch
               <select
-                onChange={(event) => setSelectedBatchId(event.target.value)}
+                onChange={(event) => handleBatchChange(event.target.value)}
                 suppressHydrationWarning
                 value={selectedBatchId}
               >
